@@ -47,8 +47,9 @@ export interface ScannerSettings {
     startTime: string;
     cooldown: number;
     preferredMode?: 'volume' | 'amp'; // 优选模式
+    amplitudeMode?: 'bottomHigh' | 'highLow'; // 振幅计算方式：bottomHigh (底高模式) | highLow (高低模式)
     conditions: {
-      amp: { enabled: boolean; range: [number, number]; mode?: 'bottom_high' | 'high_low' };
+      amp: { enabled: boolean; range: [number, number] };
       longShort: { enabled: boolean; buyEnabled: boolean; buy: number; sellEnabled: boolean; sell: number };
       m: { enabled: boolean; range: [number, number] };
       fundingRateOptimization?: {

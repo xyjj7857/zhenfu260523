@@ -258,7 +258,7 @@ interface CandidateRowProps {
 }
 
 const CandidateRow: React.FC<CandidateRowProps> = ({ candidate, stageId }) => {
-  const { symbol, status, buyRatio, m, amp, reason, isPass, isPreferred } = candidate;
+  const { symbol, status, buyRatio, m, amp, ampBottomHigh, ampHighLow, reason, isPass, isPreferred } = candidate;
   
   return (
     <tr className={`hover:bg-slate-50/50 group transition-colors ${isPreferred ? 'bg-emerald-50/30' : ''}`}>
@@ -282,9 +282,15 @@ const CandidateRow: React.FC<CandidateRowProps> = ({ candidate, stageId }) => {
         ) : (
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-slate-900">
-              {amp}/{m}/{buyRatio}
+              {amp}% / {m}M / {buyRatio}%
             </span>
-            <span className="text-[8px] text-slate-400 font-medium">AMP/M(百万)/多空</span>
+            {ampBottomHigh !== undefined && ampHighLow !== undefined ? (
+              <span className="text-[7.5px] text-slate-500 font-medium">
+                底高:{ampBottomHigh}% / 高低:{ampHighLow}%
+              </span>
+            ) : (
+              <span className="text-[8px] text-slate-400 font-medium">AMP / M(百万) / 多空</span>
+            )}
           </div>
         )}
       </td>

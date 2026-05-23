@@ -120,16 +120,6 @@ export class StrategyEngine {
     }
   }
 
-  public calculateAmplitude(high: number, low: number): number {
-    const isBottomHigh = this.settings?.scanner?.stage2?.conditions?.amp?.mode === 'bottom_high';
-    if (isBottomHigh) {
-      return high > 0 ? (1 - low / high) * 100 : 0;
-    } else {
-      // High-Low mode (default/方式2)
-      return low > 0 ? (high / low - 1) * 100 : 0;
-    }
-  }
-
   setExternalMarketSource(source: {
     getKline: (symbol: string) => any;
     getStage0Results: () => any;
@@ -662,7 +652,7 @@ export class StrategyEngine {
                     takerBuyBaseAssetVolume: parseFloat(k[9]),
                     takerBuyQuoteAssetVolume: parseFloat(k[10]),
                     change: ((close - open) / open) * 100,
-                    amplitude: this.calculateAmplitude(high, low)
+                    amplitude: high > 0 ? (1 - low / high) * 100 : 0
                   };
                 });
                 
@@ -806,7 +796,7 @@ export class StrategyEngine {
               takerBuyBaseAssetVolume: parseFloat(k.V),
               takerBuyQuoteAssetVolume: parseFloat(k.Q),
               change: ((close - open) / open) * 100,
-              amplitude: this.calculateAmplitude(high, low)
+              amplitude: high > 0 ? (1 - low / high) * 100 : 0
             };
             
             dbService.saveKline(kline).then(() => {
@@ -2733,11 +2723,16 @@ export class StrategyEngine {
             const open15 = parseFloat(k[1]), high15 = parseFloat(k[2]), low15 = parseFloat(k[3]), current15 = parseFloat(k[4]), volume15 = parseFloat(k[7]);
             const buyRatio = high15 > low15 ? ((current15 - low15) / (high15 - low15)) * 100 : 0;
 
+            const ampBottomHigh = high15 > 0 ? (1 - low15 / high15) * 100 : 0;
+            const ampHighLow = low15 > 0 ? (high15 / low15 - 1) * 100 : 0;
+
             return {
               symbol,
               open15, high15, low15, current15, volume15,
               buyRatio: buyRatio,
-              amp: this.calculateAmplitude(high15, low15),
+              ampBottomHigh,
+              ampHighLow,
+              amp: ampBottomHigh,
               fundingRate: fundingRateMap.get(symbol) || 0,
               nextFundingTime: nextFundingTimeMap.get(symbol) || 0,
               status: 'Stage 1 Pass',
@@ -2814,7 +2809,8 @@ export class StrategyEngine {
              (item as any).side = localSide; // 临时存储方向供 executeTrade 使用
           }
         } else if (key === 'amp') {
-          const val = item.amp;
+          const amplitudeMode = this.settings.scanner.stage2.amplitudeMode || 'bottomHigh';
+          const val = amplitudeMode === 'highLow' ? item.ampHighLow : item.ampBottomHigh;
           const [min, max] = config.range;
           if (val < min || val > max) { passed = false; failReason = `AMP:${val.toFixed(2)}`; break; }
         } else if (key === 'm') {
@@ -2848,10 +2844,16 @@ export class StrategyEngine {
         reason = 'Stage0P 拦截';
       }
 
+      const amplitudeMode = this.settings.scanner.stage2.amplitudeMode || 'bottomHigh';
+      const activeAmp = amplitudeMode === 'highLow' ? item.ampHighLow : item.ampBottomHigh;
+
       accountResults.push({
         ...item, status: isPass ? 'Stage 2 Pass' : 'Stage 2 Fail', reason: isPass ? '指标符合' : reason, isPass,
         side: (item as any).side || 'BUY',
-        buyRatio: item.buyRatio.toFixed(2), m: (item.volume15 / 1000000).toFixed(2), amp: item.amp.toFixed(2),
+        buyRatio: item.buyRatio.toFixed(2), m: (item.volume15 / 1000000).toFixed(2), 
+        amp: activeAmp.toFixed(2),
+        ampBottomHigh: item.ampBottomHigh.toFixed(2),
+        ampHighLow: item.ampHighLow.toFixed(2),
         fundingRate: item.fundingRate || 0
       });
     }
@@ -2869,7 +2871,7 @@ export class StrategyEngine {
     for (let i = accountResults.length - 1; i >= 0; i--) {
       const r = accountResults[i];
       const fundingRateStr = (r.fundingRate * 100).toFixed(4) + '%';
-      const logMsg = `${r.symbol}: Close=${r.buyRatio}%, AMP=${r.amp}%, M=${r.m}M, Funding=${fundingRateStr}. ${r.isPass ? '通过' + (r.isPreferred ? ' (优选)' : '') : '未通过: ' + r.reason}`;
+      const logMsg = `${r.symbol}: Close=${r.buyRatio}%, AMP底高=${r.ampBottomHigh}%, AMP高低=${r.ampHighLow}%, M=${r.m}M, Funding=${fundingRateStr}. ${r.isPass ? '通过' + (r.isPreferred ? ' (优选)' : '') : '未通过: ' + r.reason}`;
       this.addLog('扫描', logMsg, r.isPass ? 'success' : 'info');
     }
 
@@ -3114,7 +3116,7 @@ export class StrategyEngine {
       const entryPrice = executionData?.avgPrice || (this.currentPosition ? this.currentPosition.entryPrice : kBestClose);
       // 根据用户要求，直接使用计算结果，不取绝对值
       const kBestChange = (kBestClose - kBestOpen) / kBestOpen;
-      const amp = this.calculateAmplitude(kBestHigh, kBestLow);
+      const amp = kBestHigh > 0 ? (1 - kBestLow / kBestHigh) * 100 : 0;
       
       // 真实A = (最高值 - k优收) / k优收 * 100
       const realA = ((kBestHigh - kBestClose) / kBestClose) * 100;
@@ -3136,7 +3138,10 @@ export class StrategyEngine {
         const tpFixed = side === 'BUY' ? this.settings.order.tpFixedBuy : this.settings.order.tpFixedSell;
         theoreticalTP = kBestClose * (1 + tpMultiplier * tpFixed / 100);
       } else if (tpMode === 'amp') {
-        const amp = this.calculateAmplitude(kBestHigh, kBestLow) / 100;
+        const amplitudeMode = this.settings.scanner.stage2.amplitudeMode || 'bottomHigh';
+        const amp = amplitudeMode === 'highLow' && kBestLow > 0
+          ? (kBestHigh / kBestLow - 1)
+          : (kBestHigh > 0 ? (1 - kBestLow / kBestHigh) : 0);
         const tpAmp = (side === 'BUY' ? this.settings.order.tpAmpBuy : this.settings.order.tpAmpSell) ?? 25;
         theoreticalTP = kBestClose * (1 + tpMultiplier * amp * tpAmp / 100);
       } else {
@@ -3154,7 +3159,10 @@ export class StrategyEngine {
         const slFixed = side === 'BUY' ? this.settings.order.slFixedBuy : this.settings.order.slFixedSell;
         theoreticalSL = kBestClose * (1 + slMultiplier * slFixed / 100);
       } else if (slMode === 'amp') {
-        const amp = this.calculateAmplitude(kBestHigh, kBestLow) / 100;
+        const amplitudeMode = this.settings.scanner.stage2.amplitudeMode || 'bottomHigh';
+        const amp = amplitudeMode === 'highLow' && kBestLow > 0
+          ? (kBestHigh / kBestLow - 1)
+          : (kBestHigh > 0 ? (1 - kBestLow / kBestHigh) : 0);
         const slAmp = (side === 'BUY' ? this.settings.order.slAmpBuy : this.settings.order.slAmpSell) ?? 55;
         theoreticalSL = kBestClose * (1 + slMultiplier * amp * slAmp / 100);
       } else {

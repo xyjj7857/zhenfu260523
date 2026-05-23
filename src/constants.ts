@@ -53,8 +53,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
           startTime: "00:14:59.300",
           cooldown: 0,
           preferredMode: 'volume',
+          amplitudeMode: 'bottomHigh',
           conditions: {
-            amp: { enabled: true, range: [10, 30], mode: 'high_low' },
+            amp: { enabled: true, range: [10, 30] },
             longShort: { enabled: true, buyEnabled: true, buy: 80, sellEnabled: true, sell: 20 },
             m: { enabled: true, range: [2980000, 1000000000] },
             fundingRateOptimization: { enabled: true, windowMinutes: 5, shortThreshold: -0.3 },
@@ -153,8 +154,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
           startTime: "00:14:59.600",
           cooldown: 0,
           preferredMode: 'amp',
+          amplitudeMode: 'bottomHigh',
           conditions: {
-            amp: { enabled: true, range: [10, 30], mode: 'high_low' },
+            amp: { enabled: true, range: [10, 30] },
             longShort: { enabled: true, buyEnabled: true, buy: 80, sellEnabled: false, sell: 20 },
             m: { enabled: true, range: [2980000, 1000000000] },
             fundingRateOptimization: { enabled: true, windowMinutes: 5, shortThreshold: -0.3 },
@@ -253,8 +255,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
           startTime: "00:15:59.600",
           cooldown: 0,
           preferredMode: 'amp',
+          amplitudeMode: 'bottomHigh',
           conditions: {
-            amp: { enabled: true, range: [8, 30], mode: 'high_low' },
+            amp: { enabled: true, range: [8, 30] },
             longShort: { enabled: true, buyEnabled: true, buy: 80, sellEnabled: false, sell: 20 },
             m: { enabled: true, range: [2980000, 1000000000] },
             fundingRateOptimization: { enabled: true, windowMinutes: 5, shortThreshold: -0.3 },

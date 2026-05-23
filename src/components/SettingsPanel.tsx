@@ -387,16 +387,29 @@ export default function SettingsPanel({
                     <Input label="冷却期 (min)" type="number" value={String(localSettings.scanner?.stage2?.cooldown ?? '')} onChange={v => setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, cooldown: Number(v)}}})} />
                   </div>
                 </div>
-                <div className="p-5 bg-slate-50/50 rounded-3xl border border-slate-100">
-                  <Select 
-                    label="优选币对选择方式" 
-                    value={localSettings.scanner?.stage2?.preferredMode || 'volume'} 
-                    options={[
-                      { label: '交易额最高 (M最大)', value: 'volume' },
-                      { label: '振幅最大 (波动量最大)', value: 'amp' }
-                    ]}
-                    onChange={v => setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, preferredMode: v as any}}})} 
-                  />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-5 bg-slate-50/50 rounded-3xl border border-slate-100">
+                    <Select 
+                      label="优选币对选择方式" 
+                      value={localSettings.scanner?.stage2?.preferredMode || 'volume'} 
+                      options={[
+                        { label: '交易额最高 (M最大)', value: 'volume' },
+                        { label: '振幅最大 (波动量最大)', value: 'amp' }
+                      ]}
+                      onChange={v => setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, preferredMode: v as any}}})} 
+                    />
+                  </div>
+                  <div className="p-5 bg-slate-50/50 rounded-3xl border border-slate-100">
+                    <Select 
+                      label="振幅计算规则" 
+                      value={localSettings.scanner?.stage2?.amplitudeMode || 'bottomHigh'} 
+                      options={[
+                        { label: '方式1：底高模式 (1 - 最低价 / 最高价)', value: 'bottomHigh' },
+                        { label: '方式2：高低模式 (最高价 / 最低价 - 1)', value: 'highLow' }
+                      ]}
+                      onChange={v => setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, amplitudeMode: v as any}}})} 
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.entries(localSettings.scanner?.stage2?.conditions || {})
@@ -477,48 +490,6 @@ export default function SettingsPanel({
                               (newConditions as any)[key].shortThreshold = Number(v);
                               setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, conditions: newConditions}}});
                             }} />
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    if (key === 'amp') {
-                      return (
-                        <div key={key} className="p-5 bg-slate-50/50 rounded-3xl border border-slate-100 space-y-4">
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <span className="font-black text-slate-900 text-[10px] uppercase tracking-widest">振幅 过滤</span>
-                            <Toggle enabled={config.enabled} onChange={e => {
-                              const newConditions = { ...localSettings.scanner.stage2.conditions };
-                              (newConditions as any)[key].enabled = e;
-                              setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, conditions: newConditions}}});
-                            }} />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <Input label="下限" type="number" value={String(config?.range?.[0] ?? '')} onChange={v => {
-                              const newConditions = { ...localSettings.scanner.stage2.conditions };
-                              (newConditions as any)[key].range[0] = Number(v);
-                              setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, conditions: newConditions}}});
-                            }} />
-                            <Input label="上限" type="number" value={String(config?.range?.[1] ?? '')} onChange={v => {
-                              const newConditions = { ...localSettings.scanner.stage2.conditions };
-                              (newConditions as any)[key].range[1] = Number(v);
-                              setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, conditions: newConditions}}});
-                            }} />
-                          </div>
-                          <div className="pt-2">
-                            <Select 
-                              label="振幅计算公式"
-                              value={config?.mode || 'high_low'}
-                              options={[
-                                { label: '方式1：底高模式 (1 - 最低/最高)', value: 'bottom_high' },
-                                { label: '方式2：高低模式 (最高/最低 - 1)', value: 'high_low' }
-                              ]}
-                              onChange={v => {
-                                const newConditions = { ...localSettings.scanner.stage2.conditions };
-                                (newConditions as any)[key].mode = v;
-                                setLocalSettings({...localSettings, scanner: {...localSettings.scanner, stage2: {...localSettings.scanner.stage2, conditions: newConditions}}});
-                              }}
-                            />
                           </div>
                         </div>
                       );

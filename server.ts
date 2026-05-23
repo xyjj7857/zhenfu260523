@@ -82,13 +82,10 @@ function mergeSettings(loaded: any): AppSettings {
             ...defAcc.scanner.stage2, 
             ...(acc.scanner?.stage2 || {}),
             preferredMode: acc.scanner?.stage2?.preferredMode || defAcc.scanner.stage2.preferredMode,
+            amplitudeMode: acc.scanner?.stage2?.amplitudeMode || defAcc.scanner.stage2.amplitudeMode || 'bottomHigh',
             conditions: {
               ...defAcc.scanner.stage2.conditions,
               ...(acc.scanner?.stage2?.conditions || {}),
-              amp: {
-                ...defAcc.scanner.stage2.conditions.amp,
-                ...(acc.scanner?.stage2?.conditions?.amp || {})
-              },
               longShort: {
                 ...defAcc.scanner.stage2.conditions.longShort,
                 ...(acc.scanner?.stage2?.conditions?.longShort || {})
