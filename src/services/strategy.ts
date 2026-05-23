@@ -328,6 +328,7 @@ export class StrategyEngine {
           ...accDefault.scanner.stage2, 
           ...(loaded.scanner?.stage2 || {}),
           preferredMode: loaded.scanner?.stage2?.preferredMode || accDefault.scanner.stage2.preferredMode,
+          amplitudeMode: loaded.scanner?.stage2?.amplitudeMode || accDefault.scanner.stage2.amplitudeMode || 'bottomHigh',
           conditions: {
             ...accDefault.scanner.stage2.conditions,
             ...(loaded.scanner?.stage2?.conditions || {}),
