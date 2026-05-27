@@ -253,6 +253,14 @@ async function startServer() {
   console.log("Initializing Strategy Engines...");
   let bootSettings = await loadSettings();
   
+  // Programmatically clear account with ID "2" if present in saved settings
+  const origAccountsLength = bootSettings.accounts.length;
+  bootSettings.accounts = bootSettings.accounts.filter((acc: any) => acc.id !== "2");
+  if (bootSettings.accounts.length !== origAccountsLength) {
+    console.log(`[Startup] Removed account ID "2" (${origAccountsLength} -> ${bootSettings.accounts.length})`);
+    await saveGlobalSettings(bootSettings);
+  }
+  
   // MIGRATION: Ensure 3 default accounts exist if currently only "default" is setup
   if (bootSettings.accounts.length === 1 && bootSettings.accounts[0].id === "default") {
     console.log("Migration: Expanding default setup to 3 accounts...");
